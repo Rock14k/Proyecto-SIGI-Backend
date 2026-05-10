@@ -1,0 +1,41 @@
+server:
+  port: 8081  # El servicio de usuario corre en el puerto 8081
+
+spring:
+  application:
+    name: servicio-usuario  # Nombre con el que se registra en Eureka
+  
+  datasource:
+    # En Docker, "mysql-usuario" es el nombre del contenedor de MySQL
+    url: jdbc:mysql://mysql-usuario:3306/db_usuario?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: Rock.0518
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    # hibernate.ddl-auto: update → Hibernate crea/actualiza las tablas automáticamente
+    # En producción usaríamos "validate" o "none"
+    hibernate:
+      ddl-auto: update
+    # Muestra las consultas SQL en los logs (útil para aprender qué SQL genera JPA)
+    show-sql: true
+    properties:
+      hibernate:
+        # Formatea el SQL para que sea más legible en los logs
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+# Configuración de Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+# Configuración de Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs  # URL donde se genera la documentación JSON
+  swagger-ui:
+    path: /swagger-ui.html  # URL de la interfaz visual de Swagger

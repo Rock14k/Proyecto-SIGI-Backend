@@ -1,0 +1,115 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+
+      # Configuración del cliente HTTP del Gateway
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 5s
+
+      # Descubrimiento automático con Eureka
+      discovery:
+        locator:
+          enabled: true
+
+      # Configuración de rutas
+      routes:
+
+        # AUTH (PÚBLICO)
+       
+        - id: servicio-usuario-auth
+          uri: lb://servicio-usuario
+          predicates:
+            - Path=/auth/**
+
+        # USUARIOS
+       
+        - id: servicio-usuario
+          uri: lb://servicio-usuario
+          predicates:
+            - Path=/api/usuarios/**
+          filters:
+            - JwtAuth
+
+        # REPORTES
+       
+        - id: servicio-reporte
+          uri: lb://servicio-reporte
+          predicates:
+            - Path=/api/reportes/**
+          filters:
+            - JwtAuth
+
+        # UBICACIONES
+        - id: servicio-ubicacion
+          uri: lb://servicio-ubicacion
+          predicates:
+            - Path=/api/ubicaciones/**
+          filters:
+            - JwtAuth
+
+        # EMERGENCIAS
+       
+        - id: servicio-emergencia
+          uri: lb://servicio-emergencia
+          predicates:
+            - Path=/api/emergencias/**
+          filters:
+            - JwtAuth
+
+        # RECURSOS
+        
+        - id: servicio-recurso
+          uri: lb://servicio-recurso
+          predicates:
+            - Path=/api/recursos/**
+          filters:
+            - JwtAuth
+
+        # NOTIFICACIONES
+       
+        - id: servicio-notificacion
+          uri: lb://servicio-notificacion
+          predicates:
+            - Path=/api/notificaciones/**
+          filters:
+            - JwtAuth
+
+# EUREKA
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+  instance:
+    prefer-ip-address: true
+
+# JWT
+
+jwt:
+  secret: sigi-municipalidad-valle-sol-secret-key-2024-segura
+
+# ACTUATOR
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# LOGS
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
+    org.springframework.security: DEBUG
+    reactor.netty: INFO
+

@@ -1,0 +1,27 @@
+# Puerto donde va a correr el servidor Eureka
+server:
+  port: 8761
+
+# Nombre de nuestra aplicación
+spring:
+  application:
+    name: eureka
+
+# Configuración específica de Eureka
+eureka:
+  instance:
+    hostname: localhost  
+  client:
+    # false = el servidor Eureka NO se registra a sí mismo como cliente
+    # Solo actúa como servidor de registro
+    register-with-eureka: false
+    # false = el servidor Eureka NO busca otros servidores Eureka
+    # Solo hay un servidor Eureka en nuestro sistema
+    fetch-registry: false
+    serviceUrl:
+      # URL donde está disponible el servidor Eureka
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    # Eureka espera que todos los servicios se registren antes de empezar
+    # wait-time-in-ms-when-sync-empty evita errores al inicio
+    wait-time-in-ms-when-sync-empty: 0
