@@ -21,10 +21,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // findByRol → SELECT * FROM usuarios WHERE rol = ?
     List<Usuario> findByRol(Usuario.Rol rol);
 
-    // Verifica si ya existe un usuario con ese email (útil para registro)
-    // existsBy... → SELECT COUNT(*) > 0 FROM usuarios WHERE email = ?
     boolean existsByEmail(String email);
 
-    // Busca usuarios activos
+    boolean existsByRut(String rut);
+
     List<Usuario> findByActivoTrue();
 }

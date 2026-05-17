@@ -21,6 +21,8 @@ public class UsuarioResponseDTO {
     private String telefono;
     private LocalDateTime fechaCreacion;
     private boolean activo;
+    private Long fotoMediaId;
+    private String fotoUrl;
 
     // Constructor estático que convierte una entidad Usuario a este DTO
     // Es más limpio que hacerlo en el servicio
@@ -35,6 +37,10 @@ public class UsuarioResponseDTO {
         dto.setTelefono(usuario.getTelefono());
         dto.setFechaCreacion(usuario.getFechaCreacion());
         dto.setActivo(usuario.isActivo());
+        dto.setFotoMediaId(usuario.getFotoMediaId());
+        if (usuario.getFotoMediaId() != null) {
+            dto.setFotoUrl("/api/media/" + usuario.getFotoMediaId() + "/archivo");
+        }
         return dto;  // Retornamos el DTO sin la contraseña
     }
 }

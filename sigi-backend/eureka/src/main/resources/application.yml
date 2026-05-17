@@ -10,7 +10,7 @@ spring:
 # Configuración específica de Eureka
 eureka:
   instance:
-    hostname: localhost  
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
   client:
     # false = el servidor Eureka NO se registra a sí mismo como cliente
     # Solo actúa como servidor de registro
@@ -25,3 +25,7 @@ eureka:
     # Eureka espera que todos los servicios se registren antes de empezar
     # wait-time-in-ms-when-sync-empty evita errores al inicio
     wait-time-in-ms-when-sync-empty: 0
+    # Con pocos clientes (Docker/local), los heartbeats pueden quedar por debajo del umbral
+    # y aparece: "EMERGENCY! EUREKA MAY BE INCORRECTLY CLAIMING INSTANCES ARE UP..."
+    # Autopreservación desactivada: adecuado para demo/desarrollo; en producción multizona suele dejarse en true.
+    enable-self-preservation: false

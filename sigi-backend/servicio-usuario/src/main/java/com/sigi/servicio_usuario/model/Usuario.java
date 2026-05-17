@@ -68,7 +68,7 @@ public class Usuario {
     // @Enumerated le dice a JPA cómo guardar el enum en la base de datos
     // EnumType.STRING guarda el texto "CIUDADANO", "OPERADOR", etc.
     @Enumerated(EnumType.STRING)
-    @Column(name = "rol", nullable = false)
+    @Column(name = "rol", nullable = false, length = 30)
     private Rol rol;
 
     // Número de teléfono del usuario para notificaciones
@@ -84,6 +84,14 @@ public class Usuario {
     @Column(name = "activo")
     private boolean activo = true;
 
+    /** ID en servicio-media (foto de perfil) */
+    @Column(name = "foto_media_id")
+    private Long fotoMediaId;
+
+    /** Certificado de residencia (obligatorio al registrarse como ciudadano) */
+    @Column(name = "certificado_residencia_media_id")
+    private Long certificadoResidenciaMediaId;
+
     // @PrePersist se ejecuta ANTES de guardar el usuario en la base de datos
     // Así siempre se guarda automáticamente la fecha de creación
     @PrePersist
@@ -91,7 +99,7 @@ public class Usuario {
         fechaCreacion = LocalDateTime.now();
     }
 
-    // Enum para los roles del sistema (como dice el informe)
+    // Enum para los roles del sistema 
     // CIUDADANO: puede reportar incendios y ver sus reportes
     // OPERADOR: puede validar reportes y gestionar emergencias
     // EQUIPO_EMERGENCIA: puede recibir alertas y actualizar el estado
@@ -99,6 +107,10 @@ public class Usuario {
         CIUDADANO,
         OPERADOR_MUNICIPAL,
         EQUIPO_EMERGENCIA,
+        BRIGADISTA,
+        BOMBERO,
+        AMBULANCIA,
+        SEGURIDAD_MUNICIPAL,
         ADMIN
     }
 }

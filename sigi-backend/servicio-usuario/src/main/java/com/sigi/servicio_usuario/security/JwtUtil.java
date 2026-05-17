@@ -4,6 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -12,14 +14,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-// @Component registra esta clase como un Bean de Spring
-// Los Beans son objetos que Spring crea y administra automáticamente
+// @Component registra esta clase como un Bean de Spring (patrón Singleton:
+// Spring mantiene una sola instancia compartida en la aplicación)
 @Component
 public class JwtUtil {
 
-    // Clave secreta para firmar los tokens
-    // Debe ser la MISMA que usa el API Gateway para validar
-    private static final String SECRET_KEY = "sigi-municipalidad-valle-sol-secret-key-2024-segura";
+    /** Claim extra: ID numérico del usuario para otros microservicios sin consultar BD */
+    public static final String CLAIM_USER_ID = "userId";
+    public static final String CLAIM_NOMBRE = "nombre";
+    public static final String CLAIM_APELLIDO = "apellido";
+
+    // Misma clave que api-gateway (variable JWT_SECRET en Docker / Kubernetes)
+    @Value("${jwt.secret:sigi-municipalidad-valle-sol-secret-key-2024-segura}")
+    private String secretKey;
     
     // El token dura 24 horas (en milisegundos)
     // 1000ms × 60s × 60min × 24h = 86,400,000 ms
@@ -29,17 +36,25 @@ public class JwtUtil {
     private Key getSigningKey() {
         // getBytes convierte el String a bytes
         // Keys.hmacShaKeyFor() crea una clave HMAC-SHA compatible con JWT
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Método para generar un token JWT para un usuario
-    // email = quién es el usuario
-    // rol = qué permisos tiene
-    public String generateToken(String email, String rol) {
-        // Map para guardar datos adicionales en el token (llamados "claims")
+    /**
+     * Genera un JWT. Incluimos userId (además de email en subject y role) para que
+     * servicio-reporte guarde usuario_id sin otra llamada HTTP al servicio-usuario.
+     */
+    public String generateToken(String email, String rol, Long userId, String nombre, String apellido) {
         Map<String, Object> claims = new HashMap<>();
-        // Guardamos el rol en el token para que el Gateway lo pueda leer
         claims.put("role", rol);
+        if (userId != null) {
+            claims.put(CLAIM_USER_ID, userId);
+        }
+        if (nombre != null) {
+            claims.put(CLAIM_NOMBRE, nombre);
+        }
+        if (apellido != null) {
+            claims.put(CLAIM_APELLIDO, apellido);
+        }
 
         return Jwts.builder()
                 // setClaims() agrega los datos extras al token
@@ -64,6 +79,10 @@ public class JwtUtil {
     // Extrae el rol del token
     public String extractRol(String token) {
         return extractClaims(token).get("role", String.class);
+    }
+
+    public Long extractUserId(String token) {
+        return extractClaims(token).get(CLAIM_USER_ID, Long.class);
     }
 
     // Verifica si el token está expirado

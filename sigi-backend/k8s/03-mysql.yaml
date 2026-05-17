@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-sigi
+  namespace: sigi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-sigi
+  template:
+    metadata:
+      labels:
+        app: mysql-sigi
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sigi-secret
+                  key: MYSQL_PASSWORD
+          volumeMounts:
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init
+          configMap:
+            name: mysql-init-scripts
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-scripts
+  namespace: sigi
+data:
+  01-databases.sql: |
+    CREATE DATABASE IF NOT EXISTS db_usuario;
+    CREATE DATABASE IF NOT EXISTS db_reporte;
+    CREATE DATABASE IF NOT EXISTS db_ubicacion;
+    CREATE DATABASE IF NOT EXISTS db_emergencia;
+    CREATE DATABASE IF NOT EXISTS db_recurso;
+    CREATE DATABASE IF NOT EXISTS db_notificacion;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-sigi
+  namespace: sigi
+spec:
+  selector:
+    app: mysql-sigi
+  ports:
+    - port: 3306
+      targetPort: 3306

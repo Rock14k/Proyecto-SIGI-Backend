@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sigi-common
+  namespace: sigi
+data:
+  EUREKA_HOST: "eureka-server"
+  MYSQL_HOST: "mysql-sigi"
+  MYSQL_PORT: "3306"
+  MYSQL_USER: "root"

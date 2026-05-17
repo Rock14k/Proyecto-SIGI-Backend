@@ -1,0 +1,245 @@
+
+# Ejemplo: docker build -t sigi/api-gateway:latest api-gateway/
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: sigi
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: api-gateway }
+  template:
+    metadata:
+      labels: { app: api-gateway }
+    spec:
+      containers:
+        - name: gw
+          image: sigi/api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8080 }]
+          envFrom: [{ configMapRef: { name: sigi-common } }]
+          env:
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: sigi-secret, key: JWT_SECRET } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: sigi
+spec:
+  type: NodePort
+  selector: { app: api-gateway }
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicio-usuario
+  namespace: sigi
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: servicio-usuario }
+  template:
+    metadata:
+      labels: { app: servicio-usuario }
+    spec:
+      containers:
+        - name: app
+          image: sigi/servicio-usuario:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8081 }]
+          envFrom: [{ configMapRef: { name: sigi-common } }]
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom: { secretKeyRef: { name: sigi-secret, key: MYSQL_PASSWORD } }
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: sigi-secret, key: JWT_SECRET } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicio-usuario
+  namespace: sigi
+spec:
+  selector: { app: servicio-usuario }
+  ports:
+    - port: 8081
+      targetPort: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicio-ubicacion
+  namespace: sigi
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: servicio-ubicacion }
+  template:
+    metadata:
+      labels: { app: servicio-ubicacion }
+    spec:
+      containers:
+        - name: app
+          image: sigi/servicio-ubicacion:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8083 }]
+          envFrom: [{ configMapRef: { name: sigi-common } }]
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom: { secretKeyRef: { name: sigi-secret, key: MYSQL_PASSWORD } }
+            - name: OPENCAGE_API_KEY
+              valueFrom: { secretKeyRef: { name: sigi-secret, key: OPENCAGE_API_KEY } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicio-ubicacion
+  namespace: sigi
+spec:
+  selector: { app: servicio-ubicacion }
+  ports:
+    - port: 8083
+      targetPort: 8083
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicio-recurso
+  namespace: sigi
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: servicio-recurso }
+  template:
+    metadata:
+      labels: { app: servicio-recurso }
+    spec:
+      containers:
+        - name: app
+          image: sigi/servicio-recurso:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8085 }]
+          envFrom: [{ configMapRef: { name: sigi-common } }]
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom: { secretKeyRef: { name: sigi-secret, key: MYSQL_PASSWORD } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicio-recurso
+  namespace: sigi
+spec:
+  selector: { app: servicio-recurso }
+  ports:
+    - port: 8085
+      targetPort: 8085
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicio-notificacion
+  namespace: sigi
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: servicio-notificacion }
+  template:
+    metadata:
+      labels: { app: servicio-notificacion }
+    spec:
+      containers:
+        - name: app
+          image: sigi/servicio-notificacion:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8086 }]
+          envFrom: [{ configMapRef: { name: sigi-common } }]
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom: { secretKeyRef: { name: sigi-secret, key: MYSQL_PASSWORD } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicio-notificacion
+  namespace: sigi
+spec:
+  selector: { app: servicio-notificacion }
+  ports:
+    - port: 8086
+      targetPort: 8086
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicio-emergencia
+  namespace: sigi
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: servicio-emergencia }
+  template:
+    metadata:
+      labels: { app: servicio-emergencia }
+    spec:
+      containers:
+        - name: app
+          image: sigi/servicio-emergencia:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8084 }]
+          envFrom: [{ configMapRef: { name: sigi-common } }]
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom: { secretKeyRef: { name: sigi-secret, key: MYSQL_PASSWORD } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicio-emergencia
+  namespace: sigi
+spec:
+  selector: { app: servicio-emergencia }
+  ports:
+    - port: 8084
+      targetPort: 8084
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicio-reporte
+  namespace: sigi
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: servicio-reporte }
+  template:
+    metadata:
+      labels: { app: servicio-reporte }
+    spec:
+      containers:
+        - name: app
+          image: sigi/servicio-reporte:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8082 }]
+          envFrom: [{ configMapRef: { name: sigi-common } }]
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom: { secretKeyRef: { name: sigi-secret, key: MYSQL_PASSWORD } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicio-reporte
+  namespace: sigi
+spec:
+  selector: { app: servicio-reporte }
+  ports:
+    - port: 8082
+      targetPort: 8082

@@ -27,12 +27,8 @@ public class SecurityConfig {
             
             // Configuramos qué peticiones requieren autenticación
             .authorizeHttpRequests(auth -> auth
-                // Las rutas de autenticación son públicas (login, registro)
-                .requestMatchers("/auth/**").permitAll()
-                // La documentación Swagger también es pública
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                // Cualquier otra ruta requiere estar autenticado
-                .anyRequest().authenticated()
+                // El API Gateway ya validó JWT; aquí confiamos en headers o acceso interno (demo SIGI).
+                .anyRequest().permitAll()
             )
             
             // Configuramos el manejo de sesiones como STATELESS

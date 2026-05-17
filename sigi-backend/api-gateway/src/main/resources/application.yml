@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: api-gateway
+  codec:
+    max-in-memory-size: 10MB
 
   cloud:
     gateway:
@@ -81,12 +83,35 @@ spring:
           filters:
             - JwtAuth
 
+        # EMPLEOS
+        - id: servicio-empleo
+          uri: lb://servicio-empleo
+          predicates:
+            - Path=/api/empleos/**
+          filters:
+            - JwtAuth
+
+        # MEDIA — certificado de registro (público)
+        - id: servicio-media-registro
+          uri: lb://servicio-media
+          predicates:
+            - Path=/api/media/upload-registro
+          order: -1
+
+        # MEDIA (imágenes)
+        - id: servicio-media
+          uri: lb://servicio-media
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - JwtAuth
+
 # EUREKA
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
 
   instance:
     prefer-ip-address: true
@@ -94,7 +119,7 @@ eureka:
 # JWT
 
 jwt:
-  secret: sigi-municipalidad-valle-sol-secret-key-2024-segura
+  secret: ${JWT_SECRET:sigi-municipalidad-valle-sol-secret-key-2024-segura}
 
 # ACTUATOR
 

@@ -1,0 +1,29 @@
+# Secretos locales (API keys, JWT, passwords) — NO subir al repositorio
+.env
+.env.*
+!.env.example
+
+# Maven
+**/target/
+
+# Logs y temporales
+*.log
+*.tmp
+*.swp
+*.orig
+
+# IDEs / editores
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+.factorypath
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Docker (opcional: volúmenes locales si los definieras así)
+*.local.override.yml

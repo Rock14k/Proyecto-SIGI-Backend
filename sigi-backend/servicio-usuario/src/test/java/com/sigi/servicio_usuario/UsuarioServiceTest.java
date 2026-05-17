@@ -2,14 +2,14 @@ package com.sigi.servicio_usuario;
 
 
 // JUnit 5 - framework de pruebas
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 // Mockito - para crear objetos "falsos" (mocks) en las pruebas
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,7 +18,7 @@ import com.sigi.servicio_usuario.dto.UsuarioRegistroDTO;
 import com.sigi.servicio_usuario.dto.UsuarioResponseDTO;
 import com.sigi.servicio_usuario.model.Usuario;
 import com.sigi.servicio_usuario.repository.UsuarioRepository;
-import com.sigi.servicio_usuario.security.JwtUtil;
+import com.sigi.servicio_usuario.service.UsuarioService;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -26,6 +26,7 @@ import java.util.Optional;
 
 // Clase de prueba para el UsuarioService
 // Las pruebas verifican que la lógica de negocio funciona correctamente
+@ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
 
     // @Mock crea un objeto falso de UsuarioRepository
@@ -37,21 +38,10 @@ class UsuarioServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    // @Mock para el generador de tokens
-    @Mock
-    private JwtUtil jwtUtil;
-
     // @InjectMocks crea el servicio real e inyecta los mocks en él
     // Así probamos el servicio sin sus dependencias reales
     @InjectMocks
     private UsuarioService usuarioService;
-
-    // @BeforeEach se ejecuta ANTES de cada prueba
-    @BeforeEach
-    void setUp() {
-        // Inicializa los mocks de Mockito
-        MockitoAnnotations.openMocks(this);
-    }
 
     // @Test marca este método como una prueba
     @Test
@@ -66,20 +56,18 @@ class UsuarioServiceTest {
         dto.setRut("28754250k");
         dto.setEmail("durant@test.com");
         dto.setPassword("Rock56");
-        dto.setRol(Usuario.Rol.CIUDADANO);
+        dto.setCertificadoResidenciaMediaId(99L);
 
-        // when(...).thenReturn(...) = "cuando se llame este método, retorna esto"
-        // Simulamos que NO existe un usuario con ese email
-        when(usuarioRepository.existsByEmail("juan@test.com")).thenReturn(false);
-        
-        // Simulamos que el encoder devuelve una contraseña encriptada
-        when(passwordEncoder.encode("123456")).thenReturn("$2a$12$hasheado");
+        when(usuarioRepository.existsByEmail("durant@test.com")).thenReturn(false);
+        when(usuarioRepository.existsByRut("28754250k")).thenReturn(false);
+        when(passwordEncoder.encode("Rock56")).thenReturn("$2a$12$hasheado");
 
         // Creamos el usuario que "guardaríamos" en la base de datos
         Usuario usuarioGuardado = new Usuario();
         usuarioGuardado.setId(1L);
         usuarioGuardado.setNombre("Rock");
         usuarioGuardado.setApellido("Durant");
+        usuarioGuardado.setRut("28754250-k");
         usuarioGuardado.setEmail("durant@test.com");
         usuarioGuardado.setPassword("$2a$12$hasheado");
         usuarioGuardado.setRol(Usuario.Rol.CIUDADANO);
@@ -110,9 +98,9 @@ class UsuarioServiceTest {
         dto.setPassword("123456");
         dto.setNombre("Test");
         dto.setApellido("User");
-        dto.setRol(Usuario.Rol.CIUDADANO);
+        dto.setRut("11111111-1");
+        dto.setCertificadoResidenciaMediaId(1L);
 
-        // Simulamos que el email YA existe en la base de datos
         when(usuarioRepository.existsByEmail("existente@test.com")).thenReturn(true);
 
         // ACT & ASSERT: verificamos que lanza una excepción
@@ -160,10 +148,10 @@ class UsuarioServiceTest {
         // Optional.empty() simula que NO se encontró el usuario
         when(usuarioRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // Verificamos que lanza excepción
-        assertThrows(
+        RuntimeException excepcion = assertThrows(
             RuntimeException.class,
             () -> usuarioService.obtenerPorId(999L)
         );
+        assertNotNull(excepcion.getMessage());
     }
 }

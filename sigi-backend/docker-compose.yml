@@ -1,0 +1,216 @@
+# S.I.G.I — Municipalidad Valle del Sol (demo Duoc UC)
+# Integrantes referencia: Hawk Durant, Emilio Jaramillo, Rodrigo Candia.
+#
+# docker compose up --build
+# (La primera vez descarga Maven deps; puede tardar varios minutos.)
+
+services:
+  mysql-sigi:
+    image: mysql:8.0
+    container_name: mysql-sigi
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-root}
+    # Imagen oficial expone MYSQL_ROOT_PASSWORD al healthcheck
+    # Puerto en tu Mac: si ya tienes MySQL en 3306, el default 13306 evita conflicto.
+    # Desde contenedores sigue siendo mysql-sigi:3306 (no cambies MYSQL_PORT abajo).
+    ports:
+      - "${MYSQL_PUBLISH_PORT:-13306}:3306"
+    volumes:
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 8s
+      timeout: 5s
+      retries: 15
+
+  eureka-server:
+    build:
+      context: ./eureka
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+    # Evita que api-gateway y microservicios arranquen antes de que el puerto 8761 acepte conexiones
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8761/"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 90s
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_HOST: eureka-server
+      JWT_SECRET: ${JWT_SECRET:-sigi-municipalidad-valle-sol-secret-key-2024-segura}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  servicio-usuario:
+    build:
+      context: ./servicio-usuario
+      dockerfile: Dockerfile
+    # Puertos del host para Swagger/OpenAPI en local (el gateway solo expone la API en 8080).
+    ports:
+      - "8081:8081"
+    environment:
+      MYSQL_HOST: mysql-sigi
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      EUREKA_HOST: eureka-server
+      JWT_SECRET: ${JWT_SECRET:-sigi-municipalidad-valle-sol-secret-key-2024-segura}
+    depends_on:
+      mysql-sigi:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  servicio-ubicacion:
+    build:
+      context: ./servicio-ubicacion
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      MYSQL_HOST: mysql-sigi
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      EUREKA_HOST: eureka-server
+      OPENCAGE_API_KEY: ${OPENCAGE_API_KEY:-}
+    depends_on:
+      mysql-sigi:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  servicio-recurso:
+    build:
+      context: ./servicio-recurso
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8085"
+    environment:
+      MYSQL_HOST: mysql-sigi
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      EUREKA_HOST: eureka-server
+    depends_on:
+      mysql-sigi:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  servicio-notificacion:
+    build:
+      context: ./servicio-notificacion
+      dockerfile: Dockerfile
+    ports:
+      - "8086:8086"
+    environment:
+      MYSQL_HOST: mysql-sigi
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      EUREKA_HOST: eureka-server
+    depends_on:
+      mysql-sigi:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  servicio-emergencia:
+    build:
+      context: ./servicio-emergencia
+      dockerfile: Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      MYSQL_HOST: mysql-sigi
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      EUREKA_HOST: eureka-server
+    depends_on:
+      mysql-sigi:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      servicio-recurso:
+        condition: service_started
+      servicio-notificacion:
+        condition: service_started
+
+  servicio-reporte:
+    build:
+      context: ./servicio-reporte
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      MYSQL_HOST: mysql-sigi
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      EUREKA_HOST: eureka-server
+    depends_on:
+      mysql-sigi:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      servicio-ubicacion:
+        condition: service_started
+      servicio-emergencia:
+        condition: service_started
+
+  servicio-empleo:
+    build:
+      context: ./servicio-empleo
+      dockerfile: Dockerfile
+    ports:
+      - "8087:8087"
+    environment:
+      MYSQL_HOST: mysql-sigi
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      EUREKA_HOST: eureka-server
+    depends_on:
+      mysql-sigi:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  servicio-media:
+    build:
+      context: ./servicio-media
+      dockerfile: Dockerfile
+    ports:
+      - "8088:8088"
+    environment:
+      MYSQL_HOST: mysql-sigi
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      EUREKA_HOST: eureka-server
+      MEDIA_UPLOAD_DIR: /app/uploads
+    volumes:
+      - media-uploads:/app/uploads
+    depends_on:
+      mysql-sigi:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+volumes:
+  media-uploads:
